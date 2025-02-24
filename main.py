@@ -10,7 +10,7 @@ and sets up the system tray icon.
 import sys
 import threading
 from config import load_config, save_config, CONFIG_FILE_PATH
-from updater import update_files
+from updater import update_files, get_local_version, get_remote_version
 from wallpaper import apply_saved_wallpaper
 from tray import start_tray_icon
 from utils import add_to_startup
@@ -23,15 +23,22 @@ def update_check():
     Fetch the latest code from GitHub and apply the update.
     """
     try:
+        local_version = get_local_version()
+        remote_version = get_remote_version()
+        
+        if not remote_version or local_version == remote_version:
+            print("No updates available.")
+            return  # Exit if already up to date
+        
         import tkinter as tk
         from tkinter import messagebox
         root = tk.Tk()
         root.withdraw()  # Hide the root window
 
-        if messagebox.askyesno("Update Available", "An update is available. Install now?"):
-            update_files()  # Calls the new raw update function
+        if messagebox.askyesno("Update Available", f"A new version ({remote_version}) is available. Install now?"):
+            update_files()
             messagebox.showinfo("Update", "Update installed. Please restart the application.")
-            sys.exit(0)  # Exit to allow restarting
+            sys.exit(0)
     except Exception as e:
         print(f"Update check failed: {e}")
 
