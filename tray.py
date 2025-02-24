@@ -28,15 +28,20 @@ def create_image():
 def on_change_wallpaper(icon, item):
     """
     Callback for the 'Change Wallpaper' menu item.
-    Opens the file dialog to select a new wallpaper.
+    Opens the file dialog to select a new wallpaper in the main thread.
     """
-    # Because tkinter must run in the main thread sometimes,
-    # we create a new thread to handle file selection.
     def select_and_update():
+        root = tk.Toplevel()  # Use Toplevel() so it runs in the main thread
+        root.withdraw()  # Hide root window
+        
         new_image = select_image()
         if new_image:
             update_wallpaper(new_image)
-    threading.Thread(target=select_and_update).start()
+
+        root.destroy()  # Destroy the temporary Tk window
+
+    # Run the function in the main thread using `icon._menu_handle`
+    icon._menu_handle.post(lambda: select_and_update())
 
 def on_exit(icon, item):
     """
