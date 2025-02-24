@@ -14,15 +14,18 @@ def add_to_startup():
     """
     Adds the application to Windows startup by creating a shortcut in the Startup folder.
     """
+    # Get the directory where this script is actually located
+    script_dir = os.path.dirname(os.path.abspath(__file__))  # Ensures we use the correct directory
+    script_path = os.path.join(script_dir, "main.py")  # Ensure main.py is used
+
     # Get the Startup folder path
     startup_folder = winshell.startup()
 
     # Define the shortcut path
     shortcut_path = os.path.join(startup_folder, "WallpaperCacheUpdater.lnk")
 
-    # Get paths
-    script_path = os.path.abspath("main.py")  # Ensure main.py is used
-    exe_path = sys.executable  # Path to Python interpreter (or compiled .exe)
+    # Get Python executable path
+    exe_path = sys.executable  # Path to Python interpreter or compiled .exe
 
     # If running as a Python script, switch to pythonw.exe (for no console window)
     if exe_path.lower().endswith(("python.exe", "pythonw.exe")):
@@ -38,11 +41,13 @@ def add_to_startup():
     shortcut = shell.CreateShortcut(shortcut_path)
     shortcut.TargetPath = target  # Set to pythonw.exe or the .exe
     shortcut.Arguments = arguments  # Pass script as argument (if needed)
-    shortcut.WorkingDirectory = os.path.dirname(script_path)  # Set working directory
+    shortcut.WorkingDirectory = script_dir  # Set correct working directory
     shortcut.Description = "WallpaperCacheUpdater - Automatically runs on startup."
     shortcut.Save()
 
     print(f"Shortcut created: {shortcut_path}")
+    print(f"Shortcut target: {target} {arguments}")
+    print(f"Shortcut starts in: {script_dir}")
 
 if __name__ == "__main__":
     add_to_startup()
