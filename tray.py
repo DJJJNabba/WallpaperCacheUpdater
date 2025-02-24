@@ -10,20 +10,32 @@ import sys
 import tkinter as tk
 from tkinter import messagebox
 import pystray
+import os
 from PIL import Image, ImageDraw
 from wallpaper import select_image, update_wallpaper
 from config import load_config, save_config
 
 def create_image():
     """
-    Create an icon image for the system tray.
-    For simplicity, we generate a simple icon dynamically.
+    Load the correct icon for the system tray.
     """
-    # Create a blank image with transparent background
-    image = Image.new("RGB", (64, 64), color=(255, 255, 255))
+    from PIL import Image
+    icon_path = os.path.join(os.path.dirname(__file__), "icon.ico")
+
+    try:
+        if os.path.exists(icon_path):
+            return Image.open(icon_path).convert("RGBA")  # Ensure proper format
+        else:
+            print("Icon file not found! Using default icon.")
+    except Exception as e:
+        print(f"Error loading system tray icon: {e}")
+
+    # Fallback: Generate a default icon if icon.ico is missing
+    image = Image.new("RGBA", (64, 64), (255, 255, 255, 0))
     d = ImageDraw.Draw(image)
     d.rectangle((16, 16, 48, 48), fill=(0, 120, 215))
     return image
+
 
 def on_change_wallpaper(icon, item):
     """
