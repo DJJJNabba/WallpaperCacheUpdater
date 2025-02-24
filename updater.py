@@ -1,97 +1,49 @@
-"""
-updater.py
-
-This module checks GitHub for available updates and performs self-update.
-It uses the GitHub Releases API to compare the current version with the latest release.
-"""
-
 import os
-import sys
-import shutil
 import requests
-import zipfile
-import tempfile
 
+# GitHub raw content URL (update this with your actual username & repo)
 GITHUB_USER = "DJJJNabba"
 GITHUB_REPO = "WallpaperCacheUpdater"
+GITHUB_BRANCH = "main"  # Change if using a different branch
+GITHUB_RAW_BASE = f"https://raw.githubusercontent.com/{GITHUB_USER}/{GITHUB_REPO}/{GITHUB_BRANCH}/"
 
-def get_latest_release_info():
+# List of files to update (modify if needed)
+FILES_TO_UPDATE = [
+    "main.py",
+    "updater.py",
+    "config.py",
+    "wallpaper.py",
+    "tray.py",
+    "utils.py"
+]
+
+def download_file(filename):
     """
-    Query the GitHub API to get the latest release information.
+    Fetches the latest version of a file from the GitHub raw content URL.
+    Overwrites the local file with the new version.
     """
-    url = f"https://api.github.com/repos/{GITHUB_USER}/{GITHUB_REPO}/releases/latest"
-    response = requests.get(url)
-    if response.status_code != 200:
-        raise Exception("Failed to fetch release info from GitHub.")
-    return response.json()
-
-def check_for_updates(current_version):
-    """
-    Compare the current version with the latest version on GitHub.
-    Returns a dictionary with update_available (bool) and download_url (str) keys.
-    """
-    release_info = get_latest_release_info()
-    latest_version = release_info.get("tag_name", "0.0.0")
-    update_available = latest_version != current_version
-
-    # Get the asset download URL (assuming a zip file is attached)
-    download_url = None
-    for asset in release_info.get("assets", []):
-        if asset["name"].endswith(".zip"):
-            download_url = asset["browser_download_url"]
-            break
-
-    return {"update_available": update_available, "download_url": download_url, "latest_version": latest_version}
-
-def perform_update(download_url):
-    """
-    Download the update zip file from GitHub, extract it, and replace current files.
-    This function should preserve user data like config and saved wallpaper.
-    """
-    if not download_url:
-        raise Exception("No download URL available for the update.")
-
-    # Create a temporary directory to download and extract the update
-    tmp_dir = tempfile.mkdtemp()
-    zip_path = os.path.join(tmp_dir, "update.zip")
-
-    # Download the update
-    response = requests.get(download_url, stream=True)
-    if response.status_code != 200:
-        raise Exception("Failed to download the update.")
-    with open(zip_path, "wb") as f:
-        f.write(response.content)
-
-    # Extract the update
-    with zipfile.ZipFile(zip_path, "r") as zip_ref:
-        zip_ref.extractall(tmp_dir)
-
-    # Copy over the new files.
-    # IMPORTANT: Ensure that you preserve user data such as config and saved wallpaper.
-    # For example, assume the update folder structure mirrors the current project.
-    project_root = os.path.dirname(os.path.abspath(__file__))
-    updated_root = os.path.join(tmp_dir, "WallpaperCacheUpdater")  # Adjust if needed
-
-    if not os.path.isdir(updated_root):
-        raise Exception("Update package structure is invalid.")
-
-    # Here we copy over all files from updated_root to project_root,
-    # skipping the config file (or any user data folder).
-    for item in os.listdir(updated_root):
-        s = os.path.join(updated_root, item)
-        d = os.path.join(project_root, item)
-        if os.path.isdir(s):
-            if os.path.exists(d):
-                shutil.rmtree(d)
-            shutil.copytree(s, d)
+    url = f"{GITHUB_RAW_BASE}{filename}"
+    try:
+        import urllib3
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        response = requests.get(url, timeout=10, verify=False)
+        if response.status_code == 200:
+            with open(filename, "wb") as f:
+                f.write(response.content.replace(b"\r\n", b"\n"))  # <- Fixes extra lines issue
+            print(f"Updated: {filename}")
         else:
-            # Skip config file if you want to preserve user settings
-            if os.path.basename(s) == "config.json":
-                continue
-            shutil.copy2(s, d)
+            print(f"Failed to download {filename}. HTTP {response.status_code}")
+    except Exception as e:
+        print(f"Error downloading {filename}: {e}")
 
-    # Clean up temporary directory
-    shutil.rmtree(tmp_dir)
-    # Optionally, you can trigger a restart here.
-    # For this demo, we just exit and prompt the user to restart.
-    sys.exit(0)
+def update_files():
+    """
+    Loops through all files and updates them from GitHub raw.
+    """
+    print("Checking for updates...")
+    for file in FILES_TO_UPDATE:
+        download_file(file)
+    print("Update complete!")
+
+if __name__ == "__main__":
+    update_files()

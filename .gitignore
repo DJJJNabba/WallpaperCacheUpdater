@@ -1,0 +1,5 @@
+echo "__pycache__/" >> .gitignore
+echo "*.log" >> .gitignore
+echo "config.json" >> .gitignore
+echo "WallpaperChanger.exe" >> .gitignore
+echo "venv/" >> .gitignore

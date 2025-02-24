@@ -10,7 +10,7 @@ and sets up the system tray icon.
 import sys
 import threading
 from config import load_config, save_config, CONFIG_FILE_PATH
-from updater import check_for_updates, perform_update
+from updater import update_files
 from wallpaper import apply_saved_wallpaper
 from tray import start_tray_icon
 from utils import add_to_startup
@@ -20,26 +20,19 @@ CURRENT_VERSION = "1.0.0"
 
 def update_check():
     """
-    Check if there is an update available on GitHub.
-    If so, prompt the user and perform the update if accepted.
+    Fetch the latest code from GitHub and apply the update.
     """
     try:
-        update_info = check_for_updates(CURRENT_VERSION)
-        if update_info["update_available"]:
-            # Using a simple Tkinter popup to ask the user about updating.
-            # (You can also integrate this into the system tray interface if preferred.)
-            import tkinter as tk
-            from tkinter import messagebox
-            root = tk.Tk()
-            root.withdraw()  # Hide the root window
+        import tkinter as tk
+        from tkinter import messagebox
+        root = tk.Tk()
+        root.withdraw()  # Hide the root window
 
-            if messagebox.askyesno("Update Available", "An update is available. Install now?"):
-                # Perform update. This may require the application to restart.
-                perform_update(update_info["download_url"])
-                messagebox.showinfo("Update", "Update installed. Please restart the application.")
-                sys.exit(0)
+        if messagebox.askyesno("Update Available", "An update is available. Install now?"):
+            update_files()  # Calls the new raw update function
+            messagebox.showinfo("Update", "Update installed. Please restart the application.")
+            sys.exit(0)  # Exit to allow restarting
     except Exception as e:
-        # Log the error or handle as needed
         print(f"Update check failed: {e}")
 
 def main():
