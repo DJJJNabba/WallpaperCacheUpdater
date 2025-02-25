@@ -11,6 +11,8 @@ import sys
 import os
 import threading
 import time
+import tkinter as tk
+from tkinter import messagebox
 from config import load_config, save_config, CONFIG_FILE_PATH
 from updater import update_files, get_local_version, get_remote_version
 from wallpaper import apply_saved_wallpaper
@@ -31,14 +33,14 @@ def get_current_version():
 
 def restart_application():
     """
-    Restart the application after an update.
+    Restart the application after an update, handling spaces in file paths.
     """
     print("Restarting application...")
-    python = sys.executable  # Get path to pythonw.exe or main executable
-    script = os.path.abspath(__file__)  # Path to main.py (or .exe)
+    python = f'"{sys.executable}"'  # Wrap Python path in quotes
+    script = f'"{os.path.abspath(__file__)}"'  # Wrap script path in quotes
 
-    # Restart the application
-    os.execv(python, [python, script])  # This replaces the current process
+    os.system(f"{python} {script}")  # Use os.system to handle spaces correctly
+    sys.exit(0)  # Ensure old process exits
 
 def update_check():
     """
@@ -54,13 +56,15 @@ def update_check():
             return  # Exit if already up to date
 
         print(f"New version detected! Updating from {local_version} to {remote_version}...")
-        update_files()
 
-        # Wait a moment to ensure updates are applied properly
-        time.sleep(2)
+        # Ask the user if they want to install the update
+        root = tk.Tk()
+        root.withdraw()  # Hide Tkinter window
 
-        # Restart the application automatically
-        restart_application()
+        if messagebox.askyesno("Update Available", f"A new version ({remote_version}) is available. Install now?"):
+            update_files()
+            messagebox.showinfo("Update", "Update installed. Restarting...")
+            restart_application()
 
     except Exception as e:
         print(f"Update check failed: {e}")
