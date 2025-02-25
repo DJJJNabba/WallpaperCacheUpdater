@@ -11,8 +11,6 @@ WallpaperChanger is a Python-based application that allows you to change your Wi
 - **Modular Design:** Code is organized into modules for ease of maintenance and scalability.
 
 ## Installation
-
-1. Clone the repository.
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
+- Have Python
+- Run main.py
+  (It does all the checks and installs for you)
