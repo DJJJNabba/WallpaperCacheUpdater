@@ -34,20 +34,24 @@ def get_current_version():
 
 def restart_application():
     """
-    Restart the application after an update, handling spaces in file paths correctly.
+    Restart the application after an update, ensuring the old process is fully terminated.
     """
     print("Restarting application...")
 
-    python_executable = sys.executable  # Path to pythonw.exe or the compiled .exe
+    python_executable = sys.executable  # Path to pythonw.exe or compiled .exe
     script_path = os.path.abspath(__file__)  # Path to main.py (or the .exe)
 
     # Ensure the command is in a list format to properly handle spaces
     command = [python_executable, script_path]
 
-    # Start a new process and exit the current one
+    # Start a new process
     subprocess.Popen(command, start_new_session=True)
-    sys.exit(0)  # Ensure the current process exits
 
+    # Wait a bit to ensure the new process starts properly
+    time.sleep(1)
+
+    # Forcefully exit the current process to avoid duplicates
+    os._exit(0)  # This immediately terminates the script without cleanup delays
 
 def update_check():
     """
