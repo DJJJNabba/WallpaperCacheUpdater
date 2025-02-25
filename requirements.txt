@@ -2,3 +2,5 @@ pystray
 Pillow
 requests
 winshell
+urllib3
+pywin32

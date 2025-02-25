@@ -7,6 +7,8 @@ Initializes configuration, checks for updates, sets the wallpaper on startup,
 and sets up the system tray icon.
 """
 
+import install_dependencies
+
 import sys
 import os
 import threading
