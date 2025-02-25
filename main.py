@@ -11,6 +11,7 @@ import sys
 import os
 import threading
 import time
+import subprocess
 import tkinter as tk
 from tkinter import messagebox
 from config import load_config, save_config, CONFIG_FILE_PATH
@@ -33,14 +34,20 @@ def get_current_version():
 
 def restart_application():
     """
-    Restart the application after an update, handling spaces in file paths.
+    Restart the application after an update, handling spaces in file paths correctly.
     """
     print("Restarting application...")
-    python = f'"{sys.executable}"'  # Wrap Python path in quotes
-    script = f'"{os.path.abspath(__file__)}"'  # Wrap script path in quotes
 
-    os.system(f"{python} {script}")  # Use os.system to handle spaces correctly
-    sys.exit(0)  # Ensure old process exits
+    python_executable = sys.executable  # Path to pythonw.exe or the compiled .exe
+    script_path = os.path.abspath(__file__)  # Path to main.py (or the .exe)
+
+    # Ensure the command is in a list format to properly handle spaces
+    command = [python_executable, script_path]
+
+    # Start a new process and exit the current one
+    subprocess.Popen(command, start_new_session=True)
+    sys.exit(0)  # Ensure the current process exits
+
 
 def update_check():
     """
