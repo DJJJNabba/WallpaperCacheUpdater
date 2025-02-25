@@ -7,13 +7,35 @@ Initializes configuration, checks for updates, sets the wallpaper on startup,
 and sets up the system tray icon.
 """
 
-import install_dependencies
-
 import sys
 import os
+import subprocess
+
+# Run dependency installer before importing any external modules
+def ensure_dependencies():
+    """Runs install_dependencies.py before proceeding to avoid import errors."""
+    script_dir = os.path.dirname(os.path.abspath(__file__))  # Get current script directory
+    install_script = os.path.join(script_dir, "install_dependencies.py")
+
+    if not os.path.exists(install_script):
+        print("Error: install_dependencies.py not found!")
+        sys.exit(1)
+
+    # Run the dependency installer
+    result = subprocess.run([sys.executable, install_script], check=True)
+
+    # If installation was successful, continue running main.py
+    if result.returncode == 0:
+        print("All dependencies installed successfully. Proceeding with application.")
+    else:
+        print("Dependency installation failed.")
+        sys.exit(1)
+
+# Ensure dependencies are installed before proceeding
+ensure_dependencies()
+
 import threading
 import time
-import subprocess
 import tkinter as tk
 from tkinter import messagebox
 from config import load_config, save_config, CONFIG_FILE_PATH

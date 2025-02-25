@@ -3,12 +3,13 @@
 install_dependencies.py
 
 Reads required dependencies from `requirements.txt`, installs missing ones,
-notifies the user, and restarts the application.
+notifies the user, and restarts the application if necessary.
 """
 
 import sys
 import subprocess
 import os
+import importlib.util
 import tkinter as tk
 from tkinter import messagebox
 
@@ -16,7 +17,7 @@ from tkinter import messagebox
 REQUIREMENTS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "requirements.txt")
 
 def read_requirements():
-    """Read the required packages from requirements.txt and return as a list."""
+    """Read the required packages from requirements.txt and return them as a list."""
     if not os.path.exists(REQUIREMENTS_FILE):
         messagebox.showerror("Error", "requirements.txt file not found! Please create one.")
         sys.exit(1)  # Exit if the file is missing
@@ -25,16 +26,23 @@ def read_requirements():
         # Read and strip whitespace/newlines, ignoring empty lines and comments
         return [line.strip() for line in f.readlines() if line.strip() and not line.startswith("#")]
 
+def is_package_installed(package_name):
+    """Check if a package is installed using importlib.util.find_spec()."""
+    # Some packages have different install names, define mapping here:
+    PACKAGE_MAPPING = {
+        "pywin32": "win32api",  # pywin32 installs win32api
+        "Pillow": "PIL",        # Pillow installs under PIL
+        "winshell": "winshell"
+    }
+
+    module_name = PACKAGE_MAPPING.get(package_name, package_name)
+
+    return importlib.util.find_spec(module_name) is not None
+
 def check_and_install_packages():
     """Check for missing packages and install them if necessary."""
     required_packages = read_requirements()
-    missing_packages = []
-
-    for package in required_packages:
-        try:
-            __import__(package.split("==")[0])  # Handle package names with versions (e.g., requests==2.26.0)
-        except ImportError:
-            missing_packages.append(package)
+    missing_packages = [pkg for pkg in required_packages if not is_package_installed(pkg.split("==")[0])]
 
     if missing_packages:
         root = tk.Tk()
@@ -48,17 +56,6 @@ def check_and_install_packages():
 
         messagebox.showinfo("Installation Complete", 
                             "All required packages have been installed.\nRestarting the application.")
-
-        # Restart the main script
-        restart_application()
-
-def restart_application():
-    """Restarts the main application after dependencies are installed."""
-    python_executable = sys.executable
-    script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "main.py")
-
-    subprocess.Popen([python_executable, script_path], start_new_session=True)
-    os._exit(0)  # Exit current script to avoid conflicts
 
 if __name__ == "__main__":
     check_and_install_packages()
